@@ -48,4 +48,37 @@ public class AccountServiceImpl implements AccountService {
                 .map(accountMapper::mapToAccountDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public AccountDto deposit(int id, double amount) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException("Account with ID " + id + " does not exist"));
+        double total = account.getBalance() + amount;
+        account.setBalance(total);
+        Account savedAccount = accountRepository.save(account);
+        return accountMapper.mapToAccountDto(savedAccount);
+    }
+
+    @Override
+    public AccountDto withdraw(int id, double amount) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException("Account with ID " + id + " does not exist"));
+
+        if (account.getBalance() < amount) {
+            throw new RuntimeException("Insufficient amount");
+        }
+        double total = account.getBalance() - amount;
+        account.setBalance(total);
+        Account savedAccount = accountRepository.save(account);
+        return accountMapper.mapToAccountDto(savedAccount);
+    }
+
+    @Override
+    public APIResponse deleteAccount(int id) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException("Account with ID " + id + " does not exist"));
+        accountRepository.deleteById(id);
+        return APIResponse.builder().message("Account has been deleted successfully..!!").build();
+
+    }
 }
